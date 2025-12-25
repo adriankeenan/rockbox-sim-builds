@@ -1,0 +1,95 @@
+name: Build Rockbox Simulators
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sundays at midnight
+  workflow_dispatch:
+  push:
+    branches:
+      - init
+
+jobs:
+  build-rb-sim-linux:
+    runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.build-info.outputs.hash }}
+      date: ${{ steps.build-info.outputs.date }}
+    strategy:
+      matrix:
+        target:
+          - name: Apple iPod Mini 2G
+            id: 26
+          - name: Apple iPod Classic/6G
+            id: 29
+          - name: Eros Q / K native
+            id: 247
+
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsdl-dev
+
+      - name: Clone Rockbox
+        run: git clone git://git.rockbox.org/rockbox
+
+      - name: Dump target IDs
+        run: ./rockbox/tools/configure --type=s || true
+
+      - name: Get build info
+        id: build-info
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+          TARGET_NAME: ${{ matrix.target.name }}
+        run: |
+          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
+          HASH=$(git -C rockbox rev-parse --short HEAD)
+          DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "filename=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+
+      - name: Configure
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+        run: ./rockbox/tools/configure --type=s --target="${TARGET_ID}"
+
+      - name: Build
+        run: |
+          make
+          make fullinstall
+
+      - name: Rename binary
+        run: mv rockboxui ${{ steps.build-info.outputs.filename }}
+
+      - name: Upload simulator binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build-info.outputs.filename }}
+          path: ${{ steps.build-info.outputs.filename }}
+          if-no-files-found: 'error'
+          retention-days: 7
+
+  create-release:
+    needs: build-rb-sim-linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2.5.0
+        with:
+          tag_name: rb-${{ needs.build-rb-sim-linux.outputs.hash }}
+          name: rockbox simulator ${{ needs.build-rb-sim-linux.outputs.date }} ${{ needs.build-rb-sim-linux.outputs.hash }}
+          files: artifacts/*/*
+          body: |
+            [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for linux.
+
+            Commit hash [${{ needs.build-rb-sim-linux.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.build-rb-sim-linux.outputs.hash }}) from ${{ needs.build-rb-sim-linux.outputs.date }}.
+
+            See assets for simulator binaries.
+          generate_release_notes: false
