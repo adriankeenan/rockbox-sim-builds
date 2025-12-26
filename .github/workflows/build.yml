@@ -2,7 +2,7 @@ name: Build Rockbox Simulators
 
 on:
   schedule:
-    - cron: '0 0 * * 0' # Weekly on Sundays at midnight
+    - cron: '0 0 * * *' # Daily at midnight
   workflow_dispatch:
   push:
     branches:
