@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - init
+      - main
 
 jobs:
   build-rb-sim-linux:
