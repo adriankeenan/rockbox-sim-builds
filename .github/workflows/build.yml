@@ -144,7 +144,7 @@ jobs:
         run: ./rockbox/tools/configure --type=aSW --target="${TARGET_ID}"
 
       - name: Build
-        run: make fullinstall
+        run: make
 
       - name: ls
         run: ls -lash
