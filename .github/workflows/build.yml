@@ -68,8 +68,33 @@ jobs:
           if-no-files-found: 'error'
           retention-days: 7
 
+  build-sdl2-win32:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache SDL2
+        id: cache-sdl2
+        uses: actions/cache@v4
+        with:
+          path: ~/mingw32-sdl
+          key: sdl2-mingw-w64
+
+      - name: Install dependencies
+        if: steps.cache-sdl2.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+
+      - name: Compile SDL2
+        if: steps.cache-sdl2.outputs.cache-hit != 'true'
+        run: |
+          wget http://www.libsdl.org/release/SDL2-2.32.8.tar.gz
+          tar xvzf SDL2-2.32.8.tar.gz
+          cd SDL2-2.32.8
+          ./configure --host=x86_64-w64-mingw32 --prefix=${HOME}/mingw32-sdl
+          make && make install
+
+
   build-rb-sim-win32:
     runs-on: ubuntu-latest
+    needs: build-sdl2-win32
     outputs:
       hash: ${{ steps.build-info.outputs.hash }}
       date: ${{ steps.build-info.outputs.date }}
@@ -87,14 +112,15 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
 
-      - name: Compile SDL2
-        run: |
-          wget http://www.libsdl.org/release/SDL2-2.32.8.tar.gz
-          tar xvzf SDL2-2.32.8.tar.gz
-          cd SDL2-2.32.8
-          ./configure --host=x86_64-w64-mingw32 --prefix=${HOME}/mingw32-sdl
-          make && make install
-          echo "${HOME}/mingw32-sdl" >> $GITHUB_PATH
+      - name: Restore SDL2 from cache
+        uses: actions/cache@v4
+        with:
+          path: ~/mingw32-sdl
+          key: sdl2-mingw-w64
+          fail-on-cache-miss: true
+
+      - name: Add SDL2 to PATH
+        run: echo "${HOME}/mingw32-sdl/bin" >> $GITHUB_PATH
 
       - name: Clone Rockbox
         run: git clone git://git.rockbox.org/rockbox
