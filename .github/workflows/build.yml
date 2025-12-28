@@ -68,8 +68,73 @@ jobs:
           if-no-files-found: 'error'
           retention-days: 7
 
+  build-rb-sim-win32:
+    runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.build-info.outputs.hash }}
+      date: ${{ steps.build-info.outputs.date }}
+    strategy:
+      matrix:
+        target:
+#          - name: Apple iPod Mini 2G
+#            id: 26
+#          - name: Apple iPod Classic/6G
+#            id: 29
+          - name: Eros Q / K native
+            id: 247
+
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+
+      - name: Compile SDL2
+        run: |
+          wget http://www.libsdl.org/release/SDL2-2.32.8.tar.gz
+          tar xvzf SDL2-2.32.8.tar.gz
+          cd SDL2-2.32.8
+          ./configure --host=x86_64-w64-mingw32 --prefix=${HOME}/mingw32-sdl
+          make && make install
+          echo "${HOME}/mingw32-sdl" >> $GITHUB_PATH
+
+      - name: Clone Rockbox
+        run: git clone git://git.rockbox.org/rockbox
+
+      - name: Get build info
+        id: build-info
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+          TARGET_NAME: ${{ matrix.target.name }}
+        run: |
+          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
+          HASH=$(git -C rockbox rev-parse --short HEAD)
+          DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "filename=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}.exe" >> $GITHUB_OUTPUT
+
+      - name: Configure
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+        run: ./rockbox/tools/configure --type=aSW --target="${TARGET_ID}"
+
+      - name: Build
+        run: make fullinstall
+
+      - name: Rename binary
+        run: mv rockboxui ${{ steps.build-info.outputs.filename }}
+
+      - name: Upload simulator binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build-info.outputs.filename }}
+          path: ${{ steps.build-info.outputs.filename }}
+          if-no-files-found: 'error'
+          retention-days: 7
+
   create-release:
-    needs: build-rb-sim-linux
+    needs:
+     - build-rb-sim-linux
+     - build-rb-sim-win32
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -82,6 +147,7 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v2.5.0
+        if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-${{ needs.build-rb-sim-linux.outputs.hash }}
           name: rockbox simulator ${{ needs.build-rb-sim-linux.outputs.date }} ${{ needs.build-rb-sim-linux.outputs.hash }}
@@ -89,7 +155,7 @@ jobs:
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for linux.
 
-            Commit hash [${{ needs.build-rb-sim-linux.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.build-rb-sim-linux.outputs.hash }}) from ${{ needs.build-rb-sim-linux.outputs.date }}.
+            Built from commit [${{ needs.build-rb-sim-linux.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.build-rb-sim-linux.outputs.hash }}) published on ${{ needs.build-rb-sim-linux.outputs.date }}.
 
             See assets for simulator binaries.
           generate_release_notes: false
