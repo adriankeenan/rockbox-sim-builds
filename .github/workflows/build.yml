@@ -146,8 +146,11 @@ jobs:
       - name: Build
         run: make fullinstall
 
+      - name: ls
+        run: ls -lash
+
       - name: Rename binary
-        run: mv rockboxui ${{ steps.build-info.outputs.filename }}
+        run: mv rockboxui.exe ${{ steps.build-info.outputs.filename }}
 
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
