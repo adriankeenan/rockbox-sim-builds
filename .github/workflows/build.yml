@@ -185,9 +185,9 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v2.5.0
-        if: github.ref == 'refs/heads/main'
+        #if: github.ref == 'refs/heads/main'
         with:
-          tag_name: rb-${{ needs.build-simulator-linux.outputs.hash }}
+          tag_name: rb-master
           name: rockbox simulator ${{ needs.build-simulator-linux.outputs.date }} ${{ needs.build-simulator-linux.outputs.hash }}
           files: artifacts/*/*
           body: |
