@@ -10,9 +10,10 @@ jobs:
   bootstrap:
     runs-on: ubuntu-latest
     outputs:
-      targets: ${{ steps.set-matrix.outputs.targets }}
+      targets: ${{ steps.set-targets.outputs.targets }}
     steps:
       - name: Set targets
+        id: set-targets
         run: |
           cat << 'EOF' > targets.json
           [
