@@ -92,14 +92,16 @@ jobs:
           make
           make fullinstall
 
-      - name: Rename binary
-        run: mv rockboxui ${{ steps.build-info.outputs.filename }}
+      - name: Debug ls
+        run: ls -lash
 
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.filename }}
-          path: ${{ steps.build-info.outputs.filename }}
+          path: |
+            rockboxui
+            simdisk/
           if-no-files-found: 'error'
           retention-days: 7
 
@@ -156,15 +158,12 @@ jobs:
           make
           make fullinstall
 
-      - name: Rename binary
-        run: mv rockboxui.exe ${{ steps.build-info.outputs.filename }}
-
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.filename }}
           path: |
-            ${{ steps.build-info.outputs.filename }}
+            rockboxui.exe
             simdisk/
           if-no-files-found: 'error'
           retention-days: 7
