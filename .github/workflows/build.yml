@@ -104,6 +104,7 @@ jobs:
             simdisk/
           if-no-files-found: 'error'
           retention-days: 7
+          include-hidden-files: true # simdisk dir contains .rockbox folder
 
   build-simulator-win32:
     runs-on: ubuntu-latest
@@ -167,6 +168,7 @@ jobs:
             simdisk/
           if-no-files-found: 'error'
           retention-days: 7
+          include-hidden-files: true # simdisk dir contains .rockbox folder
 
   create-release:
     needs:
