@@ -80,7 +80,7 @@ jobs:
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "filename=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+          echo "folder_name=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
 
       - name: Configure
         env:
@@ -98,7 +98,7 @@ jobs:
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-info.outputs.filename }}
+          name: ${{ steps.build-info.outputs.folder_name }}
           path: |
             rockboxui
             simdisk/
@@ -147,7 +147,7 @@ jobs:
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "filename=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}.exe" >> $GITHUB_OUTPUT
+          echo "folder_name=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
 
       - name: Configure
         env:
@@ -162,7 +162,7 @@ jobs:
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-info.outputs.filename }}
+          name: ${{ steps.build-info.outputs.folder_name }}
           path: |
             rockboxui.exe
             simdisk/
@@ -179,10 +179,18 @@ jobs:
       contents: write
 
     steps:
-      - name: Download all artifacts
+      - name: Download simulator artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Zip simulator artifacts
+        run: |
+          mkdir -p simulators
+          for dir in artifacts/*/; do
+            folder_name=$(basename "$dir")
+            zip -r simulators/"${folder_name}.zip" "$dir"
+          done
 
       - name: Create Release
         uses: softprops/action-gh-release@v2.5.0
@@ -190,7 +198,7 @@ jobs:
         with:
           tag_name: rb-master
           name: rockbox simulator ${{ needs.build-simulator-linux.outputs.date }} ${{ needs.build-simulator-linux.outputs.hash }}
-          files: artifacts/*/*
+          files: simulators/*
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for linux.
 
