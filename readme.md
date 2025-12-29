@@ -1,11 +1,13 @@
 # rockbox-sim-builds
 
-[Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for linux, generated via GitHub Actions for various devices.
+[Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for Linux and Windows, generated via GitHub Actions for various devices.
 All the work happens [here](.github/workflows/build.yml).
 
 New simulator builds are produced from the rockbox `master` branch every Sunday at midnight UTC.
 
-For builds, see [Releases](../../releases)
+## Where are the builds?
+
+Builds are available as assets in the latest [release](../../releases).
 
 ## Adding targets
 
