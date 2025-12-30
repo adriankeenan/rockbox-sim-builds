@@ -186,9 +186,10 @@ jobs:
       - name: Zip simulator artifacts
         run: |
           mkdir -p simulators
-          for dir in artifacts/*/; do
+          cd artifacts
+          for dir in */; do
             folder_name=$(basename "$dir")
-            zip -r simulators/"${folder_name}.zip" "$dir"
+            zip -r ../simulators/"${folder_name}.zip" "$dir"
           done
 
       - name: Create Release
