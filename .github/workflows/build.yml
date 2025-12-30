@@ -92,9 +92,6 @@ jobs:
           make
           make fullinstall
 
-      - name: Debug ls
-        run: ls -lash
-
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
@@ -102,6 +99,7 @@ jobs:
           path: |
             rockboxui
             simdisk/
+            *.bmp
           if-no-files-found: 'error'
           retention-days: 7
           include-hidden-files: true # simdisk dir contains .rockbox folder
@@ -166,6 +164,7 @@ jobs:
           path: |
             rockboxui.exe
             simdisk/
+            *.bmp
           if-no-files-found: 'error'
           retention-days: 7
           include-hidden-files: true # simdisk dir contains .rockbox folder
