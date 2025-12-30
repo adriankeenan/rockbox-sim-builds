@@ -235,8 +235,8 @@ jobs:
 
   create-release:
     needs:
-     - build-simulator-linux
-     - build-simulator-win32
+#     - build-simulator-linux
+#     - build-simulator-win32
      - build-simulator-macos
     runs-on: ubuntu-latest
     permissions:
