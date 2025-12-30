@@ -17,8 +17,8 @@ jobs:
         run: |
           cat << 'EOF' > targets.json
           [
-            {"name": "Apple iPod Color/Photo", "id: 20},
-            {"name": "Apple iPod Nano 1G", "id: 21},
+            {"name": "Apple iPod Color/Photo", "id": 20},
+            {"name": "Apple iPod Nano 1G", "id": 21},
             {"name": "Apple iPod 3G", "id": 23},
             {"name": "Apple iPod 4G Grayscale", "id": 24},
             {"name": "Apple iPod Mini 2G", "id": 26},
