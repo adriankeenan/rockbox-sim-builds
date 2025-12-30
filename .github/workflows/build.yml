@@ -17,6 +17,10 @@ jobs:
         run: |
           cat << 'EOF' > targets.json
           [
+            {"name": "Apple iPod Color/Photo": "id: 20},
+            {"name": "Apple iPod Nano 1G": "id: 21},
+            {"name": "Apple iPod 3G", "id": 23},
+            {"name": "Apple iPod 4G Grayscale", "id": 24},
             {"name": "Apple iPod Mini 2G", "id": 26},
             {"name": "Apple iPod Classic/6G", "id": 29},
             {"name": "Eros Q / K native", "id": 247}
@@ -41,7 +45,7 @@ jobs:
       - name: Compile SDL2
         if: steps.cache-sdl2.outputs.cache-hit != 'true'
         run: |
-          wget http://www.libsdl.org/release/SDL2-2.32.8.tar.gz
+          wget https://www.libsdl.org/release/SDL2-2.32.8.tar.gz
           tar xvzf SDL2-2.32.8.tar.gz
           cd SDL2-2.32.8
           ./configure --host=i686-w64-mingw32 --prefix=${HOME}/mingw32-sdl
@@ -80,7 +84,7 @@ jobs:
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "filename=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+          echo "folder_name=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
 
       - name: Configure
         env:
@@ -92,16 +96,17 @@ jobs:
           make
           make fullinstall
 
-      - name: Rename binary
-        run: mv rockboxui ${{ steps.build-info.outputs.filename }}
-
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-info.outputs.filename }}
-          path: ${{ steps.build-info.outputs.filename }}
+          name: ${{ steps.build-info.outputs.folder_name }}
+          path: |
+            rockboxui
+            simdisk/
+            *.bmp
           if-no-files-found: 'error'
           retention-days: 7
+          include-hidden-files: true # simdisk dir contains .rockbox folder
 
   build-simulator-win32:
     runs-on: ubuntu-latest
@@ -144,7 +149,7 @@ jobs:
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "filename=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}.exe" >> $GITHUB_OUTPUT
+          echo "folder_name=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
 
       - name: Configure
         env:
@@ -156,18 +161,17 @@ jobs:
           make
           make fullinstall
 
-      - name: Rename binary
-        run: mv rockboxui.exe ${{ steps.build-info.outputs.filename }}
-
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-info.outputs.filename }}
+          name: ${{ steps.build-info.outputs.folder_name }}
           path: |
-            ${{ steps.build-info.outputs.filename }}
+            rockboxui.exe
             simdisk/
+            *.bmp
           if-no-files-found: 'error'
           retention-days: 7
+          include-hidden-files: true # simdisk dir contains .rockbox folder
 
   create-release:
     needs:
@@ -178,18 +182,27 @@ jobs:
       contents: write
 
     steps:
-      - name: Download all artifacts
+      - name: Download simulator artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Zip simulator artifacts
+        run: |
+          mkdir -p simulators
+          cd artifacts
+          for dir in */; do
+            folder_name=$(basename "$dir")
+            zip -r ../simulators/"${folder_name}.zip" "$dir"
+          done
 
       - name: Create Release
         uses: softprops/action-gh-release@v2.5.0
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: rb-${{ needs.build-simulator-linux.outputs.hash }}
+          tag_name: rb-master
           name: rockbox simulator ${{ needs.build-simulator-linux.outputs.date }} ${{ needs.build-simulator-linux.outputs.hash }}
-          files: artifacts/*/*
+          files: simulators/*
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for linux.
 
