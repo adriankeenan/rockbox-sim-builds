@@ -51,8 +51,130 @@ jobs:
           ./configure --host=i686-w64-mingw32 --prefix=${HOME}/mingw32-sdl
           make && make install
 
-  build-simulator-linux:
-    runs-on: ubuntu-latest
+#  build-simulator-linux:
+#    runs-on: ubuntu-latest
+#    needs:
+#      - bootstrap
+#    outputs:
+#      hash: ${{ steps.build-info.outputs.hash }}
+#      date: ${{ steps.build-info.outputs.date }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
+#
+#    steps:
+#      - name: Install dependencies
+#        run: sudo apt-get update && sudo apt-get install -y libsdl-dev
+#
+#      - name: Clone Rockbox
+#        run: git clone git://git.rockbox.org/rockbox
+#
+#      - name: Dump target IDs
+#        run: ./rockbox/tools/configure --type=s || true
+#
+#      - name: Get build info
+#        id: build-info
+#        env:
+#          TARGET_ID: ${{ matrix.target.id }}
+#          TARGET_NAME: ${{ matrix.target.name }}
+#        run: |
+#          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
+#          HASH=$(git -C rockbox rev-parse --short HEAD)
+#          DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+#          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+#          echo "date=${DATE}" >> $GITHUB_OUTPUT
+#          echo "folder_name=rockboxui-linux-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+#
+#      - name: Configure
+#        env:
+#          TARGET_ID: ${{ matrix.target.id }}
+#        run: ./rockbox/tools/configure --type=s --target="${TARGET_ID}"
+#
+#      - name: Build
+#        run: |
+#          make
+#          make fullinstall
+#
+#      - name: Upload simulator binary
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ steps.build-info.outputs.folder_name }}
+#          path: |
+#            rockboxui
+#            simdisk/
+#            *.bmp
+#          if-no-files-found: 'error'
+#          retention-days: 7
+#          include-hidden-files: true # simdisk dir contains .rockbox folder
+#
+#  build-simulator-win32:
+#    runs-on: ubuntu-latest
+#    needs:
+#      - bootstrap
+#      - build-sdl2-win32
+#    outputs:
+#      hash: ${{ steps.build-info.outputs.hash }}
+#      date: ${{ steps.build-info.outputs.date }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
+#
+#    steps:
+#      - name: Install dependencies
+#        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+#
+#      - name: Restore SDL2 from cache
+#        uses: actions/cache@v4
+#        with:
+#          path: ~/mingw32-sdl
+#          key: sdl2-mingw-w64
+#          fail-on-cache-miss: true
+#
+#      - name: Add SDL2 to PATH
+#        run: echo "${HOME}/mingw32-sdl/bin" >> $GITHUB_PATH
+#
+#      - name: Clone Rockbox
+#        run: git clone git://git.rockbox.org/rockbox
+#
+#      - name: Get build info
+#        id: build-info
+#        env:
+#          TARGET_ID: ${{ matrix.target.id }}
+#          TARGET_NAME: ${{ matrix.target.name }}
+#        run: |
+#          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
+#          HASH=$(git -C rockbox rev-parse --short HEAD)
+#          DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+#          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+#          echo "date=${DATE}" >> $GITHUB_OUTPUT
+#          echo "folder_name=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+#
+#      - name: Configure
+#        env:
+#          TARGET_ID: ${{ matrix.target.id }}
+#        run: ./rockbox/tools/configure --type=aSW --target="${TARGET_ID}"
+#
+#      - name: Build
+#        run: |
+#          make
+#          make fullinstall
+#
+#      - name: Upload simulator binary
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ steps.build-info.outputs.folder_name }}
+#          path: |
+#            rockboxui.exe
+#            simdisk/
+#            *.bmp
+#          if-no-files-found: 'error'
+#          retention-days: 7
+#          include-hidden-files: true # simdisk dir contains .rockbox folder
+
+  build-simulator-macos:
+    runs-on: macos-latest
     needs:
       - bootstrap
     outputs:
@@ -65,7 +187,9 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsdl-dev
+        run: |
+          brew update
+          brew install sdl2
 
       - name: Clone Rockbox
         run: git clone git://git.rockbox.org/rockbox
@@ -108,75 +232,12 @@ jobs:
           retention-days: 7
           include-hidden-files: true # simdisk dir contains .rockbox folder
 
-  build-simulator-win32:
-    runs-on: ubuntu-latest
-    needs:
-      - bootstrap
-      - build-sdl2-win32
-    outputs:
-      hash: ${{ steps.build-info.outputs.hash }}
-      date: ${{ steps.build-info.outputs.date }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
-
-    steps:
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
-
-      - name: Restore SDL2 from cache
-        uses: actions/cache@v4
-        with:
-          path: ~/mingw32-sdl
-          key: sdl2-mingw-w64
-          fail-on-cache-miss: true
-
-      - name: Add SDL2 to PATH
-        run: echo "${HOME}/mingw32-sdl/bin" >> $GITHUB_PATH
-
-      - name: Clone Rockbox
-        run: git clone git://git.rockbox.org/rockbox
-
-      - name: Get build info
-        id: build-info
-        env:
-          TARGET_ID: ${{ matrix.target.id }}
-          TARGET_NAME: ${{ matrix.target.name }}
-        run: |
-          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
-          HASH=$(git -C rockbox rev-parse --short HEAD)
-          DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
-          echo "hash=${HASH}" >> $GITHUB_OUTPUT
-          echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "folder_name=rockboxui-win32-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
-
-      - name: Configure
-        env:
-          TARGET_ID: ${{ matrix.target.id }}
-        run: ./rockbox/tools/configure --type=aSW --target="${TARGET_ID}"
-
-      - name: Build
-        run: |
-          make
-          make fullinstall
-
-      - name: Upload simulator binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build-info.outputs.folder_name }}
-          path: |
-            rockboxui.exe
-            simdisk/
-            *.bmp
-          if-no-files-found: 'error'
-          retention-days: 7
-          include-hidden-files: true # simdisk dir contains .rockbox folder
 
   create-release:
     needs:
      - build-simulator-linux
      - build-simulator-win32
+     - build-simulator-macos
     runs-on: ubuntu-latest
     permissions:
       contents: write
