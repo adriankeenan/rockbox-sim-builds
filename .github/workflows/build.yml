@@ -99,7 +99,7 @@ jobs:
       - name: Build
         run: |
           make
-          make install
+          make fullinstall
 
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
@@ -164,7 +164,7 @@ jobs:
       - name: Build
         run: |
           make
-          make install
+          make fullinstall
 
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
