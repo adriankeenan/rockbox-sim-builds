@@ -198,6 +198,9 @@ jobs:
             zip -9 -r ../simulators/"${folder_name}.zip" "$dir"
           done
 
+      - name: List produced simulator artifacts
+        run: ls -sh simulators
+
       - name: Create Release
         uses: softprops/action-gh-release@v2.5.0
         if: github.ref == 'refs/heads/main'
