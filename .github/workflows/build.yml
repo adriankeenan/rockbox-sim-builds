@@ -22,6 +22,12 @@ jobs:
         id: set-targets
         run:  echo "targets=$(cat .github/targets.json | jq -c .)" >> $GITHUB_OUTPUT
 
+      - name: Clone Rockbox
+        run: git clone git://git.rockbox.org/rockbox
+
+      - name: Dump available targets
+        run: ./rockbox/tools/configure --type=s || true
+
   build-sdl2-win32:
     runs-on: ubuntu-latest
     steps:
@@ -63,9 +69,6 @@ jobs:
 
       - name: Clone Rockbox
         run: git clone git://git.rockbox.org/rockbox
-
-      - name: Dump target IDs
-        run: ./rockbox/tools/configure --type=s || true
 
       - name: Get build info
         id: build-info

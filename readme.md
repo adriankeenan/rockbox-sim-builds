@@ -13,5 +13,5 @@ Builds are available as assets in the latest [release](../../releases).
 
 Feel free to create a PR for adding additional targets.
 
-1. Inspect the "Dump target IDs" step from an existing run to get the list of supported targets.
+1. Inspect the "Dump available targets" step from an existing run to get the list of supported targets.
 2. Add the target name and ID to [targets.json](.github/targets.json).
