@@ -203,7 +203,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-master
-          name: rockbox simulator ${{ needs.bootstrap.outputs.date }} ${{ needs.bootstrap.outputs.hash }}
+          name: Simulator ${{ needs.bootstrap.outputs.date }} ${{ needs.bootstrap.outputs.hash }}
           files: simulators/*
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) binary builds.
