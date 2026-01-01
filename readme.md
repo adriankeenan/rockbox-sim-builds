@@ -11,5 +11,5 @@ New simulator builds are produced from the rockbox `master` branch daily at midn
 
 Feel free to create a PR for adding additional targets.
 
-1. Inspect the "Dump available targets" step from an existing run to get the list of supported targets.
+1. Inspect the boostrap "Dump available targets" step from an existing [run](../../actions?query=branch%3Amain) to get the list of supported targets.
 2. Add the target name and ID to [targets.json](.github/targets.json).
