@@ -174,8 +174,8 @@ jobs:
           retention-days: 7
           include-hidden-files: true # simdisk dir contains .rockbox folder
 
-  build-simulator-macos-arm64:
-    runs-on: macos-latest
+  build-simulator-macos-x86:
+    runs-on: macos-15-intel
     needs:
       - bootstrap
     strategy:
@@ -203,7 +203,7 @@ jobs:
           DATE: ${{ needs.bootstrap.outputs.date }}
         run: |
           TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | tr '[:upper:]' '[:lower:]')
-          echo "folder_name=rockboxui-macos_arm64-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+          echo "folder_name=rockboxui-macos_x86-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
 
       - name: Configure
         env:
@@ -232,7 +232,7 @@ jobs:
       - bootstrap
       - build-simulator-linux
       - build-simulator-win32
-      - build-simulator-macos-arm64
+      - build-simulator-macos-x86
     runs-on: ubuntu-latest
     permissions:
       contents: write
