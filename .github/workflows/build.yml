@@ -205,12 +205,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: gh release delete rb-master --yes --repo "$REPO" || true
 
       - name: Create release
         uses: softprops/action-gh-release@v2.5.0
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-master
           name: Simulator ${{ needs.bootstrap.outputs.date }} ${{ needs.bootstrap.outputs.hash }}
