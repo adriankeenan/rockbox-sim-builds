@@ -184,10 +184,17 @@ jobs:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
 
     steps:
-      - name: Install dependencies
+
+      - name: Compile SDL2
         run: |
-          brew update
-          brew install sdl2
+          wget https://www.libsdl.org/release/SDL2-2.32.8.tar.gz
+          tar xvzf SDL2-2.32.8.tar.gz
+          cd SDL2-2.32.8
+          ./configure --prefix=${HOME}/sdl
+          make && make install
+
+      - name: Add SDL2 to PATH
+        run: echo "${HOME}/sdl/bin" >> $GITHUB_PATH
 
       - name: Clone Rockbox
         run: |
