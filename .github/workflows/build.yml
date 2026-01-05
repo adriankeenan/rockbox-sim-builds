@@ -205,12 +205,14 @@ jobs:
       - name: List produced simulator artifacts
         run: ls -sh simulators
 
-      - name: Delete existing release
+      - name: Delete existing release and tag
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         if: github.ref == 'refs/heads/main'
-        run: gh release delete rb-master --yes --repo "$REPO" || true
+        run: |
+          gh release delete rb-master --yes --repo "$REPO" || true
+          gh api --method DELETE /repos/$REPO/git/refs/tags/rb-master || true
 
       - name: Create release
         uses: softprops/action-gh-release@v2.5.0
