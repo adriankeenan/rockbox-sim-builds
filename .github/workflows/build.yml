@@ -1,5 +1,8 @@
 name: Build Rockbox Simulators
 
+env:
+  ARTIFACT_RETENTION_DAYS: 7
+
 on:
   schedule:
     - cron: '0 0 * * *' # Daily at midnight
@@ -98,17 +101,19 @@ jobs:
           make
           make fullinstall
 
+      - name: Zip simulator
+        env:
+          FOLDER_NAME: ${{ steps.build-info.outputs.folder_name }}
+        run: |
+          zip -r "${FOLDER_NAME}.zip" rockboxui simdisk *.bmp
+
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
-          path: |
-            rockboxui
-            simdisk/
-            *.bmp
+          path: ${{ steps.build-info.outputs.folder_name }}.zip
           if-no-files-found: 'error'
-          retention-days: 7
-          include-hidden-files: true # simdisk dir contains .rockbox folder
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-simulator-win32:
     runs-on: ubuntu-latest
@@ -166,17 +171,19 @@ jobs:
           find -name "*codec"        -exec i686-w64-mingw32-strip "{}" ";"
           find -name "rockboxui.exe" -exec i686-w64-mingw32-strip "{}" ";"
 
+      - name: Zip simulator
+        env:
+          FOLDER_NAME: ${{ steps.build-info.outputs.folder_name }}
+        run: |
+          zip -r "${FOLDER_NAME}.zip" rockboxui.exe simdisk *.bmp
+
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
-          path: |
-            rockboxui.exe
-            simdisk/
-            *.bmp
+          path: ${{ steps.build-info.outputs.folder_name }}.zip
           if-no-files-found: 'error'
-          retention-days: 7
-          include-hidden-files: true # simdisk dir contains .rockbox folder
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   create-release:
     needs:
@@ -191,18 +198,9 @@ jobs:
       - name: Download simulator artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: simulators
 
-      - name: Zip simulator artifacts
-        run: |
-          mkdir -p simulators
-          cd artifacts
-          for dir in */; do
-            folder_name=$(basename "$dir")
-            zip -r ../simulators/"${folder_name}.zip" "$dir"
-          done
-
-      - name: List produced simulator artifacts
+      - name: List simulator artifacts
         run: ls -sh simulators
 
       - name: Delete existing release and tag
