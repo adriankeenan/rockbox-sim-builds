@@ -5,8 +5,6 @@ on:
     - cron: '0 0 * * *' # Daily at midnight
   workflow_dispatch:
   push:
-    branches:
-      - main
 
 jobs:
 
@@ -161,6 +159,12 @@ jobs:
         run: |
           make
           make fullinstall
+
+      - name: Strip binary symbols
+        run: |
+          find -name "*rock"         -exec i686-w64-mingw32-strip "{}" ";"
+          find -name "*codec"        -exec i686-w64-mingw32-strip "{}" ";"
+          find -name "rockboxui.exe" -exec i686-w64-mingw32-strip "{}" ";"
 
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
