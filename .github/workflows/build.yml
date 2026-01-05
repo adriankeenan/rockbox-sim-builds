@@ -199,6 +199,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: simulators
+          pattern: '*'
+          merge-multiple: true
 
       - name: List simulator artifacts
         run: ls -sh simulators
