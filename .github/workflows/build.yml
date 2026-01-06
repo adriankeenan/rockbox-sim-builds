@@ -17,6 +17,7 @@ jobs:
       targets: ${{ steps.set-targets.outputs.targets }}
       hash: ${{ steps.build-info.outputs.hash }}
       date: ${{ steps.build-info.outputs.date }}
+      date_display: ${{ steps.build-info.outputs.date_display }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,8 +34,10 @@ jobs:
         run: |
           HASH=$(git -C rockbox rev-parse --short HEAD)
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+          DATE_DISPLAY=$(git -C rockbox log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "date_display=${DATE_DISPLAY}" >> $GITHUB_OUTPUT
 
       - name: Dump available targets
         run: ./rockbox/tools/configure --type=s || true
@@ -219,12 +222,12 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-master
-          name: Simulator ${{ needs.bootstrap.outputs.date }} ${{ needs.bootstrap.outputs.hash }}
+          name: Simulator ${{ needs.bootstrap.outputs.date_display }} ${{ needs.bootstrap.outputs.hash }}
           files: simulators/*
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) binary builds.
 
-            Built from commit [${{ needs.bootstrap.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.bootstrap.outputs.hash }}) published on ${{ needs.bootstrap.outputs.date }}.
+            Built from commit [${{ needs.bootstrap.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.bootstrap.outputs.hash }}) published on ${{ needs.bootstrap.outputs.date_display }}.
 
             See assets for simulator binaries.
           generate_release_notes: false
