@@ -1,5 +1,8 @@
 name: Build Rockbox Simulators
 
+env:
+  ARTIFACT_RETENTION_DAYS: 7
+
 on:
   schedule:
     - cron: '0 0 * * *' # Daily at midnight
@@ -14,6 +17,7 @@ jobs:
       targets: ${{ steps.set-targets.outputs.targets }}
       hash: ${{ steps.build-info.outputs.hash }}
       date: ${{ steps.build-info.outputs.date }}
+      date_display: ${{ steps.build-info.outputs.date_display }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,8 +34,10 @@ jobs:
         run: |
           HASH=$(git -C rockbox rev-parse --short HEAD)
           DATE=$(git -C rockbox log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S')
+          DATE_DISPLAY=$(git -C rockbox log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S')
           echo "hash=${HASH}" >> $GITHUB_OUTPUT
           echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "date_display=${DATE_DISPLAY}" >> $GITHUB_OUTPUT
 
       - name: Dump available targets
         run: ./rockbox/tools/configure --type=s || true
@@ -98,17 +104,19 @@ jobs:
           make
           make fullinstall
 
+      - name: Zip simulator
+        env:
+          FOLDER_NAME: ${{ steps.build-info.outputs.folder_name }}
+        run: |
+          zip -r "${FOLDER_NAME}.zip" rockboxui simdisk *.bmp
+
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
-          path: |
-            rockboxui
-            simdisk/
-            *.bmp
+          path: ${{ steps.build-info.outputs.folder_name }}.zip
           if-no-files-found: 'error'
-          retention-days: 7
-          include-hidden-files: true # simdisk dir contains .rockbox folder
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-simulator-win32:
     runs-on: ubuntu-latest
@@ -166,17 +174,19 @@ jobs:
           find -name "*codec"        -exec i686-w64-mingw32-strip "{}" ";"
           find -name "rockboxui.exe" -exec i686-w64-mingw32-strip "{}" ";"
 
+      - name: Zip simulator
+        env:
+          FOLDER_NAME: ${{ steps.build-info.outputs.folder_name }}
+        run: |
+          zip -r "${FOLDER_NAME}.zip" rockboxui.exe simdisk *.bmp
+
       - name: Upload simulator binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
-          path: |
-            rockboxui.exe
-            simdisk/
-            *.bmp
+          path: ${{ steps.build-info.outputs.folder_name }}.zip
           if-no-files-found: 'error'
-          retention-days: 7
-          include-hidden-files: true # simdisk dir contains .rockbox folder
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   create-release:
     needs:
@@ -191,38 +201,33 @@ jobs:
       - name: Download simulator artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: simulators
+          pattern: '*'
+          merge-multiple: true
 
-      - name: Zip simulator artifacts
-        run: |
-          mkdir -p simulators
-          cd artifacts
-          for dir in */; do
-            folder_name=$(basename "$dir")
-            zip -r ../simulators/"${folder_name}.zip" "$dir"
-          done
-
-      - name: List produced simulator artifacts
+      - name: List simulator artifacts
         run: ls -sh simulators
 
-      - name: Delete existing release
+      - name: Delete existing release and tag
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         if: github.ref == 'refs/heads/main'
-        run: gh release delete rb-master --yes --repo "$REPO" || true
+        run: |
+          gh release delete rb-master --yes --repo "$REPO" || true
+          gh api --method DELETE /repos/$REPO/git/refs/tags/rb-master || true
 
       - name: Create release
         uses: softprops/action-gh-release@v2.5.0
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-master
-          name: Simulator ${{ needs.bootstrap.outputs.date }} ${{ needs.bootstrap.outputs.hash }}
+          name: Simulator ${{ needs.bootstrap.outputs.date_display }} ${{ needs.bootstrap.outputs.hash }}
           files: simulators/*
           body: |
             [Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) binary builds.
 
-            Built from commit [${{ needs.bootstrap.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.bootstrap.outputs.hash }}) published on ${{ needs.bootstrap.outputs.date }}.
+            Built from commit [${{ needs.bootstrap.outputs.hash }}](https://github.com/Rockbox/rockbox/commit/${{ needs.bootstrap.outputs.hash }}) published on ${{ needs.bootstrap.outputs.date_display }}.
 
             See assets for simulator binaries.
           generate_release_notes: false
