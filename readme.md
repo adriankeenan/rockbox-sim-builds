@@ -1,6 +1,6 @@
 # rockbox-sim-builds
 
-[Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for Linux and Windows, generated via GitHub Actions for various targets.
+[Rockbox](https://rockbox.org) [simulator](https://www.rockbox.org/wiki/UiSimulator.html) builds for Linux, Windows and macOS, generated via GitHub Actions for various targets.
 The workflow is defined [here](.github/workflows/build.yml).
 
 New simulator builds are produced from the rockbox `master` branch daily at midnight UTC.
