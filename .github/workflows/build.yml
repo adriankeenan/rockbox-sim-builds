@@ -54,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-sdl2.outputs.cache-hit != 'true'
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-mingw-w64
 
       - name: Compile SDL2
         if: steps.cache-sdl2.outputs.cache-hit != 'true'
@@ -63,7 +63,7 @@ jobs:
           tar xvzf SDL2-2.32.8.tar.gz
           cd SDL2-2.32.8
           ./configure --host=i686-w64-mingw32 --prefix=${HOME}/mingw32-sdl
-          make && make install
+          make -j$(nproc) && make install
 
   build-simulator-linux:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsdl-dev
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsdl-dev
 
       - name: Clone Rockbox
         run: |
@@ -101,7 +101,7 @@ jobs:
 
       - name: Build
         run: |
-          make
+          make -j$(nproc)
           make fullinstall
 
       - name: Zip simulator
@@ -130,7 +130,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-mingw-w64
 
       - name: Restore SDL2 from cache
         uses: actions/cache@v4
@@ -165,7 +165,7 @@ jobs:
 
       - name: Build
         run: |
-          make
+          make -j$(nproc)
           make fullinstall
 
       - name: Strip binary symbols
