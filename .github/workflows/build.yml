@@ -58,7 +58,6 @@ jobs:
           fi
 
       - name: Dump available targets
-        if: steps.skip-check.outputs.skip != 'true'
         run: ./rockbox/tools/configure --type=s || true
 
   build-sdl2-win32:
