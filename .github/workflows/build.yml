@@ -13,11 +13,14 @@ jobs:
 
   bootstrap:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       targets: ${{ steps.set-targets.outputs.targets }}
       hash: ${{ steps.build-info.outputs.hash }}
       date: ${{ steps.build-info.outputs.date }}
       date_display: ${{ steps.build-info.outputs.date_display }}
+      skip: ${{ steps.skip-check.outputs.skip }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +42,23 @@ jobs:
           echo "date=${DATE}" >> $GITHUB_OUTPUT
           echo "date_display=${DATE_DISPLAY}" >> $GITHUB_OUTPUT
 
+      - name: Check if already built
+        id: skip-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HASH: ${{ steps.build-info.outputs.hash }}
+        run: |
+          RELEASE_NAME=$(gh release view rb-master --repo "$REPO" --json name -q '.name' 2>/dev/null || echo "")
+          if [[ "$RELEASE_NAME" == *"$HASH"* ]]; then
+            echo "Rockbox commit ${HASH} already released (\"${RELEASE_NAME}\"), skipping build."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Dump available targets
+        if: steps.skip-check.outputs.skip != 'true'
         run: ./rockbox/tools/configure --type=s || true
 
   build-sdl2-win32:
@@ -67,6 +86,7 @@ jobs:
 
   build-simulator-linux:
     runs-on: ubuntu-latest
+    if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
     strategy:
@@ -120,6 +140,7 @@ jobs:
 
   build-simulator-win32:
     runs-on: ubuntu-latest
+    if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
       - build-sdl2-win32
@@ -189,6 +210,7 @@ jobs:
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   create-release:
+    if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
       - build-simulator-linux
