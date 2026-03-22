@@ -48,13 +48,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           HASH: ${{ steps.build-info.outputs.hash }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          RELEASE_NAME=$(gh release view rb-master --repo "$REPO" --json name -q '.name' 2>/dev/null || echo "")
-          if [[ "$RELEASE_NAME" == *"$HASH"* ]]; then
-            echo "Rockbox commit ${HASH} already released (\"${RELEASE_NAME}\"), skipping build."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
+          if [[ "$EVENT_NAME" != "schedule" ]]; then
+            echo "Not a scheduled run, skipping release check."
             echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            RELEASE_NAME=$(gh release view rb-master --repo "$REPO" --json name -q '.name' 2>/dev/null || echo "")
+            if [[ "$RELEASE_NAME" == *"$HASH"* ]]; then
+              echo "Rockbox commit ${HASH} already released (\"${RELEASE_NAME}\"), skipping build."
+              echo "skip=true" >> $GITHUB_OUTPUT
+            else
+              echo "skip=false" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Dump available targets
