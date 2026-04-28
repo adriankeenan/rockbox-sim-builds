@@ -23,7 +23,7 @@ jobs:
       skip: ${{ steps.skip-check.outputs.skip }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Set targets
         id: set-targets
@@ -71,7 +71,7 @@ jobs:
     steps:
       - name: Cache SDL2
         id: cache-sdl2
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/mingw32-sdl
           key: sdl2-mingw-w64
@@ -136,7 +136,7 @@ jobs:
           zip -r "${FOLDER_NAME}.zip" rockboxui simdisk *.bmp
 
       - name: Upload simulator binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
           path: ${{ steps.build-info.outputs.folder_name }}.zip
@@ -159,7 +159,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-mingw-w64
 
       - name: Restore SDL2 from cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/mingw32-sdl
           key: sdl2-mingw-w64
@@ -207,7 +207,7 @@ jobs:
           zip -r "${FOLDER_NAME}.zip" rockboxui.exe simdisk *.bmp
 
       - name: Upload simulator binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.build-info.outputs.folder_name }}
           path: ${{ steps.build-info.outputs.folder_name }}.zip
@@ -226,7 +226,7 @@ jobs:
 
     steps:
       - name: Download simulator artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: simulators
           pattern: '*'
@@ -245,7 +245,7 @@ jobs:
           gh api --method DELETE /repos/$REPO/git/refs/tags/rb-master || true
 
       - name: Create release
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: rb-master
