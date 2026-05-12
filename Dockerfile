@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     zip \
     wget \
+    ca-certificates \
     perl \
     libsdl-dev \
     gcc-mingw-w64 \
