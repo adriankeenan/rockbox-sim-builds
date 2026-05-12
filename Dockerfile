@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     zip \
     wget \
+    ca-certificates \
     perl \
     libsdl-dev \
     gcc-mingw-w64 \
@@ -12,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 ENV SDL2_VERSION=2.32.8
-RUN wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL2_VERSION}/SDL2-${SDL2_VERSION}.tar.gz \
+RUN wget https://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz \
     && tar xzf SDL2-${SDL2_VERSION}.tar.gz \
     && cd SDL2-${SDL2_VERSION} \
     && ./configure --host=i686-w64-mingw32 --prefix=/opt/mingw32-sdl \
