@@ -2,11 +2,11 @@ name: Build Container Image
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - Dockerfile
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - Dockerfile
 
 jobs:
 
