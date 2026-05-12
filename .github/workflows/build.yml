@@ -66,6 +66,13 @@ jobs:
       - name: Dump available targets
         run: ./rockbox/tools/configure --type=s || true
 
+      - name: Save Rockbox source to cache
+        if: steps.skip-check.outputs.skip != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: rockbox/
+          key: rockbox-${{ steps.build-info.outputs.hash }}
+
   build-sdl2-win32:
     runs-on: ubuntu-latest
     steps:
@@ -103,10 +110,12 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsdl-dev
 
-      - name: Clone Rockbox
-        run: |
-          git clone git://git.rockbox.org/rockbox
-          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
+      - name: Restore Rockbox source
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: rockbox/
+          key: rockbox-${{ needs.bootstrap.outputs.hash }}
+          fail-on-cache-miss: true
 
       - name: Get build info
         id: build-info
@@ -168,10 +177,12 @@ jobs:
       - name: Add SDL2 to PATH
         run: echo "${HOME}/mingw32-sdl/bin" >> $GITHUB_PATH
 
-      - name: Clone Rockbox
-        run: |
-          git clone git://git.rockbox.org/rockbox
-          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
+      - name: Restore Rockbox source
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: rockbox/
+          key: rockbox-${{ needs.bootstrap.outputs.hash }}
+          fail-on-cache-miss: true
 
       - name: Get build info
         id: build-info
