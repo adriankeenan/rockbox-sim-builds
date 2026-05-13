@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     zip \
     wget \
+    git \
     ca-certificates \
     perl \
     libsdl-dev \
