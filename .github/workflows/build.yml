@@ -89,17 +89,11 @@ jobs:
 
     steps:
       - name: Restore Rockbox source
-        id: restore-rockbox
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: rockbox/
           key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
-
-      - name: Clone Rockbox (cache miss fallback)
-        if: steps.restore-rockbox.outputs.cache-hit != 'true'
-        run: |
-          git clone git://git.rockbox.org/rockbox
-          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
+          fail-on-cache-miss: true
 
       - name: Get build info
         id: build-info
@@ -152,17 +146,11 @@ jobs:
 
     steps:
       - name: Restore Rockbox source
-        id: restore-rockbox
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: rockbox/
           key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
-
-      - name: Clone Rockbox (cache miss fallback)
-        if: steps.restore-rockbox.outputs.cache-hit != 'true'
-        run: |
-          git clone git://git.rockbox.org/rockbox
-          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
+          fail-on-cache-miss: true
 
       - name: Get build info
         id: build-info
