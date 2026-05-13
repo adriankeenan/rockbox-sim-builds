@@ -66,56 +66,26 @@ jobs:
       - name: Dump available targets
         run: ./rockbox/tools/configure --type=s || true
 
-      - name: Save Rockbox source to cache
-        if: steps.skip-check.outputs.skip != 'true'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-${{ steps.build-info.outputs.hash }}
-
-  build-sdl2-win32:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache SDL2
-        id: cache-sdl2
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ~/mingw32-sdl
-          key: sdl2-mingw-w64
-
-      - name: Install dependencies
-        if: steps.cache-sdl2.outputs.cache-hit != 'true'
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-mingw-w64
-
-      - name: Compile SDL2
-        if: steps.cache-sdl2.outputs.cache-hit != 'true'
-        run: |
-          wget https://www.libsdl.org/release/SDL2-2.32.8.tar.gz
-          tar xvzf SDL2-2.32.8.tar.gz
-          cd SDL2-2.32.8
-          ./configure --host=i686-w64-mingw32 --prefix=${HOME}/mingw32-sdl
-          make -j$(nproc) && make install
 
   build-simulator-linux:
     runs-on: ubuntu-latest
+    container: ghcr.io/adriankeenan/rockbox-build-env:latest
     if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
+    permissions:
+      contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
 
     steps:
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsdl-dev
-
-      - name: Restore Rockbox source
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-${{ needs.bootstrap.outputs.hash }}
-          fail-on-cache-miss: true
+      - name: Clone Rockbox
+        run: |
+          git clone git://git.rockbox.org/rockbox
+          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
 
       - name: Get build info
         id: build-info
@@ -154,35 +124,23 @@ jobs:
 
   build-simulator-win32:
     runs-on: ubuntu-latest
+    container: ghcr.io/adriankeenan/rockbox-build-env:latest
     if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
-      - build-sdl2-win32
+    permissions:
+      contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
 
     steps:
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-mingw-w64
-
-      - name: Restore SDL2 from cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ~/mingw32-sdl
-          key: sdl2-mingw-w64
-          fail-on-cache-miss: true
-
-      - name: Add SDL2 to PATH
-        run: echo "${HOME}/mingw32-sdl/bin" >> $GITHUB_PATH
-
-      - name: Restore Rockbox source
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-${{ needs.bootstrap.outputs.hash }}
-          fail-on-cache-miss: true
+      - name: Clone Rockbox
+        run: |
+          git clone git://git.rockbox.org/rockbox
+          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
 
       - name: Get build info
         id: build-info
