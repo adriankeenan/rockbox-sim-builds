@@ -66,12 +66,6 @@ jobs:
       - name: Dump available targets
         run: ./rockbox/tools/configure --type=s || true
 
-      - name: Save Rockbox source to cache
-        if: steps.skip-check.outputs.skip != 'true'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-v2-${{ steps.build-info.outputs.hash }}
 
   build-simulator-linux:
     runs-on: ubuntu-latest
@@ -88,12 +82,10 @@ jobs:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
 
     steps:
-      - name: Restore Rockbox source
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
-          fail-on-cache-miss: true
+      - name: Clone Rockbox
+        run: |
+          git clone git://git.rockbox.org/rockbox
+          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
 
       - name: Get build info
         id: build-info
@@ -145,12 +137,10 @@ jobs:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
 
     steps:
-      - name: Restore Rockbox source
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: rockbox/
-          key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
-          fail-on-cache-miss: true
+      - name: Clone Rockbox
+        run: |
+          git clone git://git.rockbox.org/rockbox
+          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
 
       - name: Get build info
         id: build-info
