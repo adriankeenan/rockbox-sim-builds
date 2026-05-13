@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: rockbox/
-          key: rockbox-${{ steps.build-info.outputs.hash }}
+          key: rockbox-v2-${{ steps.build-info.outputs.hash }}
 
   build-simulator-linux:
     runs-on: ubuntu-latest
@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: rockbox/
-          key: rockbox-${{ needs.bootstrap.outputs.hash }}
+          key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
 
       - name: Clone Rockbox (cache miss fallback)
         if: steps.restore-rockbox.outputs.cache-hit != 'true'
@@ -156,7 +156,7 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: rockbox/
-          key: rockbox-${{ needs.bootstrap.outputs.hash }}
+          key: rockbox-v2-${{ needs.bootstrap.outputs.hash }}
 
       - name: Clone Rockbox (cache miss fallback)
         if: steps.restore-rockbox.outputs.cache-hit != 'true'
