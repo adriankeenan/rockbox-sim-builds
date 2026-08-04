@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     patch \
     texinfo \
     automake \
-    libtool \
+    libtool-bin \
     autoconf \
     flex \
     bison \
