@@ -6,7 +6,7 @@ on:
       tag:
         description: 'Image tag to build and push'
         required: false
-        default: 'latest'
+        default: 'build'
         type: string
   # push:
   #   branches:
