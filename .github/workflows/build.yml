@@ -183,12 +183,93 @@ jobs:
           if-no-files-found: 'error'
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
+  build-simulator-macos:
+    runs-on: macos-15
+    if: needs.bootstrap.outputs.skip != 'true'
+    needs:
+      - bootstrap
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install gcc sdl2
+          if ! command -v gcc-16 >/dev/null; then
+            echo "::error::gcc-16 not found (Rockbox configure requires it on macOS). Installed: $(ls "$(brew --prefix)"/bin/gcc-* | xargs -n1 basename | tr '\n' ' ')"
+            exit 1
+          fi
+
+      - name: Clone Rockbox
+        run: |
+          git clone git://git.rockbox.org/rockbox
+          git -C rockbox checkout ${{ needs.bootstrap.outputs.hash }}
+
+      - name: Get build info
+        id: build-info
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+          TARGET_NAME: ${{ matrix.target.name }}
+          HASH: ${{ needs.bootstrap.outputs.hash }}
+          DATE: ${{ needs.bootstrap.outputs.date }}
+        run: |
+          TARGET_SLUG=$(echo "${TARGET_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\{1,\}/-/g' | tr '[:upper:]' '[:lower:]')
+          echo "folder_name=rockboxui-macos-arm64-${TARGET_SLUG}-${TARGET_ID}-${DATE}-${HASH}" >> $GITHUB_OUTPUT
+
+      - name: Configure
+        env:
+          TARGET_ID: ${{ matrix.target.id }}
+        run: ./rockbox/tools/configure --type=s --target="${TARGET_ID}"
+
+      - name: Build
+        run: |
+          make -j$(sysctl -n hw.ncpu)
+          make fullinstall
+
+      - name: Verify binaries
+        run: |
+          file rockboxui
+          file rockboxui | grep -q arm64 || { echo "::error::rockboxui is not an arm64 binary"; exit 1; }
+
+          echo "Minimum macOS version:"
+          otool -l rockboxui | grep -A4 LC_BUILD_VERSION
+
+          FAILED=0
+          while IFS= read -r -d '' BIN; do
+            if otool -L "$BIN" | tail -n +2 | grep -E '/opt/homebrew|/usr/local'; then
+              echo "::error::${BIN} links against a Homebrew library"
+              FAILED=1
+            fi
+          done < <(find rockboxui simdisk -type f \( -name rockboxui -o -name '*.rock' -o -name '*.codec' \) -print0)
+          exit $FAILED
+
+      - name: Zip simulator
+        env:
+          FOLDER_NAME: ${{ steps.build-info.outputs.folder_name }}
+        run: |
+          zip -r "${FOLDER_NAME}.zip" rockboxui simdisk *.bmp
+
+      - name: Upload simulator binary
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.build-info.outputs.folder_name }}
+          path: ${{ steps.build-info.outputs.folder_name }}.zip
+          if-no-files-found: 'error'
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
   create-release:
     if: needs.bootstrap.outputs.skip != 'true'
     needs:
       - bootstrap
       - build-simulator-linux
       - build-simulator-win32
+      - build-simulator-macos
     runs-on: ubuntu-latest
     permissions:
       contents: write
