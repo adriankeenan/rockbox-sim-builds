@@ -9,7 +9,7 @@ New simulator builds are produced from the rockbox `master` branch daily at midn
 
 ### macOS
 
-macOS builds are for Apple Silicon (arm64) only. The minimum supported macOS version is printed in the "Verify binaries" step of the build job (expected to be macOS 15 or later, as SDL2 is linked from Homebrew).
+macOS builds are for Apple Silicon (arm64) only. They require macOS 11 or later.
 
 The binaries are unsigned, so macOS will block them after download. Remove the quarantine flag before running:
 

@@ -196,15 +196,31 @@ jobs:
         target: ${{ fromJson(needs.bootstrap.outputs.targets) }}
     env:
       MACOSX_DEPLOYMENT_TARGET: '11.0'
+      SDL2_VERSION: '2.32.10'
 
     steps:
       - name: Install dependencies
         run: |
-          brew install gcc sdl2
+          brew install gcc
           if ! command -v gcc-16 >/dev/null; then
             echo "::error::gcc-16 not found (Rockbox configure requires it on macOS). Installed: $(ls "$(brew --prefix)"/bin/gcc-* | xargs -n1 basename | tr '\n' ' ')"
             exit 1
           fi
+
+      # Homebrew's sdl2 is now sdl2-compat (a shared-only SDL3 wrapper), so
+      # build SDL2 as a static library to avoid a runtime Homebrew dependency.
+      - name: Build static SDL2
+        run: |
+          curl -fsSL "https://github.com/libsdl-org/SDL/releases/download/release-${SDL2_VERSION}/SDL2-${SDL2_VERSION}.tar.gz" | tar xz
+          cmake -S "SDL2-${SDL2_VERSION}" -B sdl2-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$HOME/sdl2" \
+            -DSDL_SHARED=OFF \
+            -DSDL_STATIC=ON \
+            -DSDL_TEST=OFF
+          cmake --build sdl2-build -j$(sysctl -n hw.ncpu)
+          cmake --install sdl2-build
+          echo "$HOME/sdl2/bin" >> $GITHUB_PATH
 
       - name: Clone Rockbox
         run: |
