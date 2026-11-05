@@ -220,6 +220,22 @@ jobs:
             -DSDL_TEST=OFF
           cmake --build sdl2-build -j$(sysctl -n hw.ncpu)
           cmake --install sdl2-build
+
+          # SDL's Objective-C code uses @available, which needs clang's runtime
+          # (___isPlatformVersionAtLeast). Rockbox links with GCC, which doesn't
+          # add it, so append it to the static link flags sdl2-config reports.
+          CLANG_RT="$(clang -print-resource-dir)/lib/darwin/libclang_rt.osx.a"
+          test -f "$CLANG_RT"
+          mv "$HOME/sdl2/bin/sdl2-config" "$HOME/sdl2/bin/sdl2-config.real"
+          cat > "$HOME/sdl2/bin/sdl2-config" <<EOF
+          #!/bin/sh
+          out=\$("$HOME/sdl2/bin/sdl2-config.real" "\$@") || exit \$?
+          case "\$1" in --static-libs) out="\$out $CLANG_RT" ;; esac
+          echo "\$out"
+          EOF
+          chmod +x "$HOME/sdl2/bin/sdl2-config"
+          "$HOME/sdl2/bin/sdl2-config" --static-libs
+
           echo "$HOME/sdl2/bin" >> $GITHUB_PATH
 
       - name: Clone Rockbox
